@@ -44,7 +44,13 @@ class PocketOptionAPI(object):
         self.session.trust_env = False
         self.proxies = proxies
         self.buy_successful = None
-        self.loop = asyncio.get_event_loop()
+        try:
+            self.loop = asyncio.get_event_loop()
+        except RuntimeError:
+            # Python 3.10+ (et 3.12/3.14 en particulier) ne crÃ©e plus de boucle
+            # implicite : on en crÃ©e une explicitement si aucune n'existe.
+            self.loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self.loop)
         self.websocket_client = WebsocketClient(self)
 
     @property
