@@ -1,4 +1,0 @@
-git+https://github.com/Mastaaa1987/PocketOptionAPI-v2.git
-python-telegram-bot>=21.0
-python-dotenv>=1.0.1
-pandas>=2.0.3
