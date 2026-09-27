@@ -63,7 +63,13 @@ class WebsocketClient(object):
         self.ssid = global_value.SSID
         self.websocket = None
         self.region = REGION()
-        self.loop = asyncio.get_event_loop()
+        try:
+            self.loop = asyncio.get_event_loop()
+        except RuntimeError:
+            # Python 3.10+ (et 3.12/3.14 en particulier) ne crÃ©e plus de boucle
+            # implicite : on en crÃ©e une explicitement si aucune n'existe.
+            self.loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self.loop)
 
     async def websocket_listener(self, ws):
         try:
