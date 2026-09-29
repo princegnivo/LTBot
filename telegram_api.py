@@ -95,6 +95,7 @@ class TelegramAPI:
         self.base_url = f"https://api.telegram.org/bot{token}"
         self._offset = 0
         self._consecutive_timeouts = 0
+        self.unauthorized = False
         # Deux sessions : une dédiée au long polling (connexion qui reste
         # ouverte), une pour les envois (utilisée par plusieurs threads).
         self._poll_session = _make_session(pool_size=1)
@@ -143,7 +144,18 @@ class TelegramAPI:
                         "(VPN ? Wi-Fi ? FAI ?). Lance `python3 diag_telegram.py`."
                     )
                 return True
-            print(f"[TelegramAPI] Réponse inattendue de getMe : {data}")
+            if data.get("error_code") == 401:
+                self.unauthorized = True
+                print(
+                    "[TelegramAPI] ❌ TOKEN REFUSÉ (401 Unauthorized). Le TELEGRAM_BOT_TOKEN lu par le bot "
+                    "est invalide ou révoqué. Vérifie dans .env : une seule ligne "
+                    "TELEGRAM_BOT_TOKEN=123456789:AAH... (sans guillemets ni espaces), fichier "
+                    "sauvegardé, et pas de variable d'environnement du même nom dans ce terminal "
+                    "(`unset TELEGRAM_BOT_TOKEN`). Token lu : "
+                    f"{len(self.token)} caractères, se termine par ...{self.token[-4:]}"
+                )
+            else:
+                print(f"[TelegramAPI] Réponse inattendue de getMe : {data}")
             return False
         except requests.RequestException as e:
             print(
