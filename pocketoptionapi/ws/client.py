@@ -1,4 +1,4 @@
-import asyncio, websockets, json, ssl
+import asyncio, websockets, json, ssl, time
 from datetime import datetime, timedelta, timezone
 
 import pocketoptionapi.constants as OP_code
@@ -66,6 +66,8 @@ class WebsocketClient(object):
         self.ssid = global_value.SSID
         self.websocket = None
         self.region = REGION()
+        self._fast_closes = 0
+        self._rx = 0
         try:
             self.loop = asyncio.get_event_loop()
         except RuntimeError:
@@ -139,7 +141,44 @@ class WebsocketClient(object):
                         sender_task = asyncio.create_task(self.send_message(self.message))
                         ping_task = asyncio.create_task(send_ping(ws))
 
-                        await asyncio.gather(on_message_task, sender_task, ping_task)
+                        self._rx = 0
+                        t_open = time.monotonic()
+
+                        # Avant : gather() attendait aussi le ping (dort 20 s), donc après
+                        # une coupure serveur le bot restait ~20 s sur une connexion morte
+                        # avant de se reconnecter. Maintenant : dès que l'écoute s'arrête
+                        # (ou que le ping échoue), on sort et on se reconnecte.
+                        done, _pending = await asyncio.wait(
+                            {on_message_task, ping_task}, return_when=asyncio.FIRST_COMPLETED
+                        )
+                        global_value.websocket_is_connected = False
+                        for t in (on_message_task, ping_task, sender_task):
+                            if not t.done():
+                                t.cancel()
+                        for t in done:
+                            if not t.cancelled() and t.exception() is not None:
+                                global_value.logger("Tâche WebSocket terminée : %s" % t.exception(), "INFO")
+
+                        lived = time.monotonic() - t_open
+                        global_value.logger(
+                            "WebSocket fermé après %.1fs (code=%s, raison=%r)"
+                            % (lived, getattr(ws, "close_code", None), getattr(ws, "close_reason", None)),
+                            "INFO",
+                        )
+                        # Backoff : si le serveur nous coupe aussitôt (session refusée / déjà
+                        # utilisée ailleurs), on espace les tentatives au lieu de le harceler.
+                        if lived < 10:
+                            self._fast_closes += 1
+                            wait = min(2 ** self._fast_closes, 30)
+                            global_value.logger(
+                                "Coupure immédiate n°%d : nouvelle tentative dans %ds. Session "
+                                "(POCKET_SSID) expirée, ou déjà utilisée par un autre bot / onglet "
+                                "PocketOption ?" % (self._fast_closes, wait),
+                                "INFO",
+                            )
+                            await asyncio.sleep(wait)
+                        else:
+                            self._fast_closes = 0
 
                 except websockets.ConnectionClosed as e:
                     global_value.websocket_is_connected = False
@@ -242,6 +281,10 @@ class WebsocketClient(object):
 
         else:
             pass
+
+        if self._rx < 6:
+            self._rx += 1
+            global_value.logger("PO ← %s" % message[:100], "INFO")
 
         if message.startswith('0') and "sid" in message:
             await self.websocket.send("40")
