@@ -101,6 +101,10 @@ class TelegramAPI:
         self._send_session = _make_session(pool_size=10)
         self._send_last_used = 0.0
 
+    def _safe(self, e) -> str:
+        """Texte d'erreur SANS le token (les exceptions requests contiennent l'URL)."""
+        return str(e).replace(self.token, "<TOKEN>")
+
     def _fresh_send_session(self):
         """Session d'envoi, avec connexions recyclées si elle est restée inactive."""
         now = time.time()
@@ -144,7 +148,7 @@ class TelegramAPI:
         except requests.RequestException as e:
             print(
                 "[TelegramAPI] ⚠️ Impossible de joindre api.telegram.org "
-                f"({e}). Vérifie ta connexion réseau (VPN/pare-feu/FAI "
+                f"({self._safe(e)}). Vérifie ta connexion réseau (VPN/pare-feu/FAI "
                 "qui bride Telegram ?) avec par ex. : "
                 "curl -v https://api.telegram.org"
             )
@@ -167,7 +171,7 @@ class TelegramAPI:
                 self._offset = result[-1]["update_id"]
                 print("[TelegramAPI] Anciens messages/clics en attente ignorés.")
         except Exception as e:
-            print(f"[TelegramAPI] skip_pending_updates : {e}")
+            print(f"[TelegramAPI] skip_pending_updates : {self._safe(e)}")
 
     # -------------------------------------------------------------- Polling
     def get_updates(self, timeout: int = POLL_TIMEOUT):
@@ -219,13 +223,22 @@ class TelegramAPI:
         Signale aussi tout appel lent (> SLOW_CALL_SECONDS).
         """
         t0 = time.time()
-        try:
-            resp = self._fresh_send_session().post(
-                f"{self.base_url}/{method}", json=payload, timeout=(CONNECT_TIMEOUT, timeout)
-            )
-        except requests.RequestException as e:
-            print(f"[TelegramAPI] Erreur réseau sur {method} ({time.time() - t0:.1f}s) : {e}")
-            return None
+        attempts = 2 if method == "editMessageText" else 1   # édition = idempotente
+        resp = None
+        for attempt in range(attempts):
+            try:
+                resp = self._fresh_send_session().post(
+                    f"{self.base_url}/{method}", json=payload, timeout=(CONNECT_TIMEOUT, timeout)
+                )
+                break
+            except requests.RequestException as e:
+                self._send_session.close()  # connexion suspecte : on repart à neuf
+                if attempt + 1 >= attempts:
+                    print(
+                        f"[TelegramAPI] Erreur réseau sur {method} "
+                        f"({time.time() - t0:.1f}s) : {type(e).__name__} — {self._safe(e)[:160]}"
+                    )
+                    return None
         elapsed = time.time() - t0
         if elapsed > SLOW_CALL_SECONDS:
             print(f"[TelegramAPI] ⏱ {method} lent : {elapsed:.1f}s (réseau vers Telegram ?)")
@@ -259,7 +272,7 @@ class TelegramAPI:
         payload = {"callback_query_id": callback_query_id}
         if text:
             payload["text"] = text
-        return self._post("answerCallbackQuery", payload, timeout=6)
+        return self._post("answerCallbackQuery", payload, timeout=5)
 
 
 def keyboard(rows):
