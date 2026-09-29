@@ -266,10 +266,19 @@ class WebsocketClient(object):
                 self.updateStream = False
                 if len(message[0]) == 3:
                     self.api.time_sync.server_timestamp = message[0][1]
-                    if not message[0][0] in global_value.pairs:
-                        global_value.pairs[message[0][0]] = {'ticks': [], 'history': []}
                     h = {'time': message[0][1], 'price': message[0][2]}
-                    global_value.pairs[message[0][0]]['ticks'].append(h)
+                    entry = global_value.pairs.setdefault(message[0][0], {})
+                    entry.setdefault('ticks', []).append(h)
+                    # CORRECTIF PRINCIPAL : get_dataframe() reconstruit les bougies depuis
+                    # pairs[pair]['history']. Avant, les ticks live n'allaient que dans
+                    # 'ticks' => les bougies restaient figées sur le préchargement et
+                    # AUCUN signal ne pouvait jamais apparaître.
+                    hist = entry.setdefault('history', [])
+                    hist.append(h)
+                    if len(hist) > 25000:      # borne la mémoire et le temps de calcul
+                        del hist[:5000]
+                    if len(entry['ticks']) > 5000:
+                        del entry['ticks'][:1000]
 
             elif self.updateHistoryNew and isinstance(message, dict):
                 self.updateHistoryNew = False
