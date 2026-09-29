@@ -577,6 +577,8 @@ if __name__ == "__main__":
     # polling, pour diagnostiquer immédiatement un problème de token ou
     # de réseau (voir telegram_api.check_connectivity).
     connected = bot.tg.check_connectivity()
+    if bot.tg.unauthorized:
+        raise SystemExit(1)  # inutile de démarrer avec un token refusé
     if connected:
         # Ignore les anciens clics accumulés pendant que le bot était éteint.
         bot.tg.skip_pending_updates()
