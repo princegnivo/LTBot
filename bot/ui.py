@@ -41,14 +41,15 @@ async def show(update: Update, text: str, rows):
     return msg
 
 
-async def drop(msg) -> None:
-    """Supprime un message sans jamais échouer (déjà supprimé, trop ancien…)."""
+async def drop(msg) -> bool:
+    """Supprime un message sans jamais échouer (déjà supprimé, trop ancien…). True si la suppression a réussi."""
     if msg is None:
-        return
+        return False
     try:
         await msg.delete()
+        return True
     except (TelegramError, AttributeError):
-        pass
+        return False
 
 
 async def drop_panel(chat_id: int) -> None:
