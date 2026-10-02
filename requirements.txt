@@ -1,7 +1,0 @@
-python-telegram-bot>=21.0,<23
-BinaryOptionsToolsV2
-pandas>=2.0
-numpy>=1.26
-# Optionnel : capture du SSID (get_ssid.py)
-# pywebview
-# requests
