@@ -1,0 +1,22 @@
+❓ FAQ
+
+• Comment ça marche ?
+Le bot détecte des signaux (5s, 1M, 2M, 5M) et peut trader pour vous sur votre compte Pocket Option.
+
+• À quoi servent les jetons ?
+1 jeton = 1 session d'auto-trading complète (démo ou réelle). Signaux et trading manuel : gratuits.
+
+• Comment gagner des jetons ?
+Bonus régulier, canal principal, amis invités, ou dépôt (voir 💎 Jetons).
+
+• Qu'est-ce que le SSID ?
+La clé de session de votre compte Pocket Option. Enregistrez-la dans ⚙️ Paramètres › Mes comptes (démo et réel).
+
+• Qu'est-ce que la martingale ?
+Après une perte, le bot attend une nouvelle confirmation sur une AUTRE paire, puis augmente la mise (×2,1 à ×2,5). Elle amplifie aussi les pertes.
+
+• Démo ou réel ?
+Commencez toujours en démo. Le réel utilise de l'argent réel : le trading comporte un risque de perte en capital.
+
+• Un problème ?
+Touchez 🆘 Support.
