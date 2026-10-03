@@ -1,0 +1,14 @@
+{
+  "_aide": "Copiez ce fichier en data/textes.json et gardez seulement les textes à changer. HTML : <b> <i> <u> <s> <code>. Variables entre accolades, ex. {tokens}.",
+  "welcome": "👋 Salut ! Je suis {bot_name}. Bienvenue dans le monde des millionnaires 🤑💰.",
+  "menu_user": "🤖 <b>{bot}</b>\n\n{mode_icon} Mode : <b>{mode}</b>\n💎 Jetons : <b>{tokens}</b>",
+  "menu_admin": "🏠 <b>Menu</b>\n\n{mode_label} · mise ${stake} · stratégies {strategies}",
+  "tokens": "💎 <b>Jetons</b>\n\nUn jeton est le carburant de l'auto-trading (le bot trade tout le cycle pour vous).\n• Session réelle complète : <b>{cost_real}</b> · démo : <b>{cost_demo}</b>\n• Trading manuel — <b>gratuit</b>\n\nVous avez : <b>{tokens}</b> jetons.\n\n🎁 <b>Jetons pour dépôts :</b>",
+  "deposit": "💰 <b>Dépôt</b>\n\nDéposez sur votre compte Pocket Option et recevez des jetons :",
+  "deposit_after": "Après votre dépôt, touchez « J'ai déposé » : je vérifie et je crédite vos jetons.",
+  "friends": "👥 <b>Invitez vos amis</b>\n\nPour chaque ami : <b>+{ref_bonus} jetons</b> pour vous.\n\n{link_block}Invités : <b>{invited}</b> · gagné : <b>{earned}</b> jetons",
+  "no_tokens": "💎 <b>Plus de jetons</b>\n\nL'auto-trading consomme 1 jeton par session. Les signaux et le trading manuel restent gratuits.\n\nGagnez-en ou demandez-en au support :",
+  "settings": "⚙️ <b>Paramètres</b>",
+  "share": "📊 {period}, les utilisateurs ont déjà tradé <b>{amount}</b> !\n\nTeste en démo — appuie sur le bouton 🚀\n\n<i>Résultat net réel de {users} utilisateurs ({trades} trades, démo et réel). Les résultats passés ne garantissent pas les résultats futurs ; risque de perte en capital.</i>",
+  "faq": ""
+}
